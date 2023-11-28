@@ -11,7 +11,7 @@
 known prolbem, the GRBaddconstr indexes might not be correct
 =#
 
-using JuMP, Gurobi
+using JuMP, Gurobi, SparseArrays
 
 function mixed_integer_linear_programming(problem::Dict)
     # 1) Reshape the problem
@@ -65,6 +65,60 @@ function mixed_integer_linear_programming(problem::Dict)
     @constraint(model, Ceq * Ac * xc + Ceq * Ab * xb .== Ceq*b)
     @constraint(model, Cgeq * Ac * xc + Cgeq * Ab * xb .>= Cgeq * b)
     @constraint(model, Cleq * Ac * xc + Cleq * Ab * xb .<= Cleq * b)
+    # 2.3) define the objective
+    @objective(model, Min, cc'*xc + cb' * xb)
+    # 3) solve the model
+    set_optimizer_attribute(model, "OutputFlag", 0)
+    optimize!(model)
+    xb = value.(xb)
+    xc = value.(xc)
+    # 4) recover the solution
+    x_optimal = Cc'*xc + Cb'*xb
+    sol = Dict("x" => x_optimal, "objval" => objective_value(model), "status" => termination_status(model))
+    return sol
+end
+
+function mixed_integer_linear_programming(c, A, b, Aeq, beq, lb, ub, vtype)
+    # 1) Reshape the problem
+    # 1.1) Split the decision variables into two groups
+    nx = length(c)
+    index_integer = findall(x -> x == "B", vtype)
+    index_continuous = findall(x -> x == "C", vtype)
+    nc = length(index_continuous)
+    nb = length(index_integer)
+    Cc = sparse(1:nc, index_continuous, ones(nc), nc, nx)
+    Cb = sparse(1:nb, index_integer, ones(nb), nb, nx)
+    # 1.2) Split the constraints into three groups
+    Ac = A*Cc'
+    Ab = A*Cb'
+    Aeqc = Aeq*Cc'
+    Aeqb = Aeq*Cb'
+    cc = Cc*c
+    cb = Cb*c
+    lbc = Cc*lb
+    ubc = Cc*ub
+    lbb = Cb*lb
+    ubb = Cb*ub
+    for i = 1:nc
+        if ubc[i] == Inf
+            ubc[i] = 1e8
+        end
+        if lbc[i] == -Inf
+            lbc[i] = 1e8
+        end
+    end
+    # 2) problem formualtion
+    model = JuMP.direct_model(Gurobi.Optimizer())
+    # 2.1) add variables
+    @variable(model, xc[1:nc])
+    @variable(model, xb[1:nb] >= 0, Bin)
+    @constraint(model, xc .>= lbc)
+    @constraint(model, xc .<= ubc)
+    @constraint(model, xb .>= lbb)
+    @constraint(model, xb .<= ubb)
+    # 2.2) add constraints
+    @constraint(model, Ac * xc + Ab * xb .<= b)
+    @constraint(model, Aeqc * xc + Aeqb * xb .== beq)
     # 2.3) define the objective
     @objective(model, Min, cc'*xc + cb' * xb)
     # 3) solve the model
