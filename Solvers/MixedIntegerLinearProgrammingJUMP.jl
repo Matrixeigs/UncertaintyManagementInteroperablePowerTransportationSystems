@@ -68,6 +68,7 @@ function mixed_integer_linear_programming(problem::Dict)
     # 2.3) define the objective
     @objective(model, Min, cc'*xc + cb' * xb)
     # 3) solve the model
+    set_optimizer_attribute(model, "OutputFlag", 0)
     optimize!(model)
     xb = value.(xb)
     xc = value.(xc)

@@ -8,7 +8,16 @@ In this tutorial, we focus on the requirements and deployment of uncertainty man
 * Gurobi.jl
 * CPLEX.jl
 * SCIP.jl
+* Pycall.jl
 
 - Python
 * numpy
 * scipy
+
+## The following steps are required for joint programming between julia and python
+
+- Pycall
+ENV["PYTHON"] should be pointed to the python interpretator, e.g., "/usr/local/bin/python3.10".
+- Gurobi 
+Installation gurobipy==10.0.3 within python
+- 

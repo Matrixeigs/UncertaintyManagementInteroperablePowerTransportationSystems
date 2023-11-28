@@ -48,88 +48,8 @@ class UnitCommitment():
         model_second_stage = [0] * ns
         for i in range(ns):
             model_second_stage[i] = self.second_stage_problem_formulation(mg=mg, u=us[i, :])
-        # # Merge the first-stage and second_stage problems
-        lb = model_first_stage["lb"]
-        ub = model_first_stage["ub"]
-        vtypes = model_first_stage["vtypes"]
-        c = model_first_stage["c"]
-        if model_first_stage["Aeq"] is not None:
-            neq = model_first_stage["Aeq"].shape[0]
-        else:
-            neq = 0
-
-        if model_first_stage["A"] is not None:
-            nineq = model_first_stage["A"].shape[0]
-        else:
-            nineq = 0
-
-        nv_first_stage = self.nv_first_stage
-        nv_second_stage = self.nv_second_stage
-
-        nv_index = zeros(ns + 1).astype(int)
-        neq_index = zeros(ns + 1).astype(int)
-        nineq_index = zeros(ns + 1).astype(int)
-        neq_index[0] = neq
-        nineq_index[0] = nineq
-        nv_index[0] = nv_first_stage
-        beq = model_first_stage["beq"]
-        b = model_first_stage["b"]
-
-        for i in range(ns):
-            if model_second_stage[i]["Geq"] is not None:
-                neq_index[i + 1] = neq_index[i] + model_second_stage[i]["Geq"].shape[0]
-            else:
-                neq_index[i + 1] = neq_index[i]
-            if model_second_stage[i]["G"] is not None:
-                nineq_index[i + 1] = nineq_index[i] + model_second_stage[i]["G"].shape[0]
-            else:
-                nineq_index[i + 1] = nineq_index[i]
-            nv_index[i + 1] = nv_index[i] + nv_second_stage
-
-            c = concatenate([c, ws[i] * model_second_stage[i]["c"]])
-            lb = concatenate([lb, model_second_stage[i]["lb"]])
-            ub = concatenate([ub, model_second_stage[i]["ub"]])
-            vtypes += model_second_stage[i]["vtypes"]
-            if model_second_stage[i]["Meq"] is not None:
-                beq = concatenate([beq, model_second_stage[i]["heq"] - model_second_stage[i]["Meq"] * us[i, :].reshape(
-                    (self.nv_uncertainty, 1))])
-            if model_second_stage[i]["M"] is not None:
-                b = concatenate([b, model_second_stage[i]["h"] - model_second_stage[i]["M"] * us[i, :].reshape(
-                    (self.nv_uncertainty, 1))])
-
-        Aeq_full = lil_matrix((neq_index[-1], nv_index[-1]))
-        Aeq_full[0:neq_index[0], 0:nv_index[0]] = model_first_stage["Aeq"]
-        for i in range(ns):
-            # For the first stage
-            Aeq_full[neq_index[i]:neq_index[i + 1], 0:nv_index[0]] = model_second_stage[i]["Eeq"]
-            # For the second stage
-            Aeq_full[neq_index[i]:neq_index[i + 1], nv_index[i]:nv_index[i + 1]] = model_second_stage[i]["Geq"]
-
-        A_full = lil_matrix((nineq_index[-1], nv_index[-1]))
-        A_full[0:int(nineq_index[0]), 0:int(nv_index[0])] = model_first_stage["A"]
-        for i in range(ns):
-            A_full[nineq_index[i]:nineq_index[i + 1], 0:nv_index[0]] = model_second_stage[i]["E"]
-            A_full[nineq_index[i]:nineq_index[i + 1], nv_index[i]:nv_index[i + 1]] = model_second_stage[i]["G"]
-
-        # 3) Obtain the results for first-stage and second stage optimization problems
-        # 3.1) Obtain the integrated solution
-        (sol, obj, success) = milp(c, Aeq=Aeq_full.tolil(), beq=beq[:, 0], A=A_full.tolil(), b=b[:,0],
-                                   xmin=lb[:,0], xmax=ub[:,0], vtypes=vtypes)
-
-        # # 4) Verify the first-stage and second stage optization problem
-        # # 4.1) First-stage solution
-        sol_first_stage = sol[0:self.nv_second_stage]
-        sol_first_stage = self.first_stage_solution_validation(sol=sol_first_stage)
-        # 4.2) Second-stage solution
-        sol_second_stage = {}
-        for i in range(ns):
-            sol_second_stage[i] = sol[int(nv_index[i]):int(nv_index[i + 1])]
-
-        sol_second_stage_checked = {}
-        for i in range(ns):
-            sol_second_stage_checked[i] = self.second_stage_solution_validation(sol_second_stage[i])
-
-        return sol_first_stage, sol_second_stage_checked
+        
+        return model_first_stage, model_second_stage
 
     def first_stage_problem_formulation(self, mg):
         ng = self.ng
@@ -634,10 +554,10 @@ class UnitCommitment():
 
 if __name__ == "__main__":
 
-    from TestCasesMicrogrids.cases_unit_commitment import micro_grid
+    from cases_unit_commitment import micro_grid
 
     mg = micro_grid
     mg["VOLL"] = 1e9
     unit_commitment = UnitCommitment(mg=mg)
-    xx = unit_commitment.stochastic_optimization(mg=mg)
-    print(xx)
+    (model_first_stage, model_second_stage) = unit_commitment.stochastic_optimization(mg=mg)
+    print(model_first_stage)
