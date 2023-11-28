@@ -18,7 +18,7 @@ function mixed_integer_linear_programming(cobj::Vector, A::Matrix, b::Vector, se
     error = GRBloadenv(env_p, "")
     env = env_p[]
 
-    GRBsetparam(env, "OutputFlag", "0") # Update environment parameters
+    GRBsetparam(env, "OutputFlag", "1") # Update environment parameters
     model_p = Ref{Ptr{Cvoid}}()
     error = GRBnewmodel(env, model_p, "milp", 0, C_NULL, C_NULL, C_NULL, C_NULL, C_NULL)
     model = model_p[]
@@ -41,13 +41,16 @@ function mixed_integer_linear_programming(cobj::Vector, A::Matrix, b::Vector, se
         vtype, # : *vtype
         C_NULL   # : **varnames
         )
+    error = GRBwrite(model, "lp.lp");
     # 2:  add constraints
     for i in 1 : NumConstrs
+        nonzero_indices = Ref{Ptr{Cint}}()
         nonzero_indices = findall(!iszero, A[i,:])
         numnz = length(nonzero_indices)
         val = zeros(numnz)
         for j in 1:numnz
             val[j] = A[i, nonzero_indices[j]]
+            # nonzero_indices[j] -= 1
         end
         if sense[i] == "<"
             error = GRBaddconstr(
@@ -80,6 +83,7 @@ function mixed_integer_linear_programming(cobj::Vector, A::Matrix, b::Vector, se
                 C_NULL,    # : *constrname
                 )
         end
+        GRBwrite(model, "lp.lp")
     end
     # 3: update model parameters
     if cmp(model_sense, "min") == 0
@@ -89,6 +93,7 @@ function mixed_integer_linear_programming(cobj::Vector, A::Matrix, b::Vector, se
     end
     # error = GRBsetintparam(model, "OutputFlag", 0)
     # error = GRBsetintparam(model, "OutputFlag", 0)
+    error = GRBwrite(model, "lp.lp");
     error = GRBoptimize(model)
     # error = GRBwrite(model, "lp.lp");
 
@@ -136,7 +141,12 @@ function mixed_integer_linear_programming(cobj::Vector, A::SparseMatrixCSC, b::V
     NumVars = Ref{Cint}()
     NumConstrs = Ref{Cint}()
     (NumConstrs, NumVars) = size(A)
-    vtype = map(x -> Int8(x), vtype) # Change type value
+    try
+        vtype = map(x -> Int8(x), vtype) # Change type value
+    catch
+        vtype = collect.(vtype)
+        vtype = map(x -> Int8(x), vtype) # Change type value
+    end
     error = GRBaddvars(
         model, # model
         NumVars,      # : numvars
@@ -150,13 +160,15 @@ function mixed_integer_linear_programming(cobj::Vector, A::SparseMatrixCSC, b::V
         vtype, # : *vtype
         C_NULL   # : **varnames
         )
+    # GRBwrite(model, "lp.lp");
     # 2:  add constraints
     for i in 1 : NumConstrs
-        nonzero_indices = findall(!iszero, A[i,:])
+        nonzero_indices = findall(!iszero, Vector(A[i,:]))
         numnz = length(nonzero_indices)
         val = zeros(numnz)
         for j in 1:numnz
             val[j] = A[i, nonzero_indices[j]]
+            nonzero_indices[j] = nonzero_indices[j]
         end
 
         if sense[i] == "<"
@@ -190,6 +202,7 @@ function mixed_integer_linear_programming(cobj::Vector, A::SparseMatrixCSC, b::V
                 C_NULL,    # : *constrname
                 )
         end
+        GRBwrite(model, "lp.lp")
     end
     # 3: update model parameters
     if cmp(model_sense, "min") == 0
@@ -241,10 +254,11 @@ end
 # lb = [0.0, 0.0, 0.0]
 # ub = [1.0, 1.0, 1.0]
 # cobj = [1.0, 1.0, 2.0]
-# vtype = [GRB_BINARY, GRB_BINARY, GRB_BINARY]
-# A = [1.0 2.0 3.0; -1.0 -1.0 0.0]
+# vtype = [GRB_BINARY, GRB_CONTINUOUS, GRB_BINARY]
+# A = [1.0 2.0 3.0; 0.0 -1.0 -1.0]
+
 # b = [4.0; -1.0]
-# sense = ["<";"<"]
+# sense = ["<"; "<"]
 
 # result = @time mixed_integer_linear_programming(cobj, A, b, sense, lb, ub, vtype, "max")
 # print(result)
