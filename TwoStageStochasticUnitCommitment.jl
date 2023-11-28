@@ -1,16 +1,15 @@
 using PowerModels
 using MAT
-include("./Solvers/MixedIntegerLinearProgrammingJUMP.jl")
+include("./StochasticOptimization/BenchMark.jl")
+
 # Load the .npz file and extract the NumPy arrays
-data = matread("./TestCasesUnitCommitment/problem_gted.mat")
+problem = matread("./TestCasesUnitCommitment/problem_gted.mat")
 
-# Access the arrays from the dictionary
-problem = data["model_centralized"]
-
+# Access the data 
+model_first_stage = problem["model_first_stage"]
+model_second_stage = problem["model_second_stage"]
+options = Dict("mipgap"=>1e-3)
 
 # Split the variables into binary group and continuous group 
-result = mixed_integer_linear_programming(problem)
-print(result)
-
-
-print(network_data)
+result = two_stage_so_centralized(model_first_stage, model_second_stage,options)
+# print(result)
