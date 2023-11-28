@@ -7,6 +7,8 @@
     s.t. A*x <= b
          lb <= x <= ub
          x_{i} \in J
+
+known prolbem, the GRBaddconstr indexes might not be correct
 =#
 
 using Gurobi
