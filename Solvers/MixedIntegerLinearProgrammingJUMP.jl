@@ -8,10 +8,10 @@
          lb <= x <= ub
          x_{i} \in J
 
-known prolbem, the GRBaddconstr indexes might not be correct
+    Based on the functionalities of JuMP, we are using CPLEX, Gurobi, and COPT.
 =#
 
-using JuMP, Gurobi, SparseArrays
+using JuMP, COPT, SparseArrays, Gurobi, CPLEX
 
 function mixed_integer_linear_programming(problem::Dict)
     # 1) Reshape the problem
@@ -53,7 +53,7 @@ function mixed_integer_linear_programming(problem::Dict)
     Cgeq = sparse(1:ngeq, index_geq, ones(ngeq), ngeq, nconstraint)
     Cleq = sparse(1:nleq, index_leq, ones(nleq), nleq, nconstraint)
     # 2) problem formualtion
-    model = JuMP.direct_model(Gurobi.Optimizer())
+    model = JuMP.direct_model(COPT.Optimizer())
     # 2.1) add variables
     @variable(model, xc[1:nc])
     @variable(model, xb[1:nb] >= 0, Bin)
