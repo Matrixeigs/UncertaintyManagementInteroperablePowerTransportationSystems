@@ -1,6 +1,6 @@
-# UncertaintyManagementPowerSystemsOperations
+# Uncertainty Management of Interoperable Power and Transportation Systems
 
-In this package, we will develop uncertainty quantificaiton and management methods for power system operations with grid-edging resources. This package can be applied for (1) electric vehicle charging management, (2) hybrid AC/DC microgrid energy management, (3) distribution system management, (4) transmission system management, (5) all electric ships, (6) data centers.
+In this package, we will develop uncertainty quantificaiton and management methods for interoperable power and transportation systems  with electric vehicles. This package can be applied for (1) electric vehicle charging management, (2) hybrid AC/DC microgrid energy management, (3) distribution system management, (4) transmission system management, (5) urban road networks.
 
 The general steps are listed as follows:
 
