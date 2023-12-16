@@ -1,8 +1,8 @@
 #=
-    Unit commitment test systems for power systems
+    Unit commitment test systems for transmission systems
 =#
 
-## Input
+## Input files
 # Parameters of units
 Pg_min = [10, 10, 10]
 Pg_max = [30, 40, 50]
