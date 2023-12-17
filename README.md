@@ -1,6 +1,6 @@
 # Uncertainty Management of Interoperable Power and Transportation Systems
 
-In this package, we will develop uncertainty quantificaiton and management methods for interoperable power and transportation systems  with electric vehicles. This package can be applied for (1) electric vehicle charging management, (2) hybrid AC/DC microgrid energy management, (3) distribution system management, (4) transmission system management, (5) urban road networks.
+In this package, we will develop uncertainty quantificaiton and management methods for interoperable power and transportation systems with electric vehicles. This package can be applied for (1) electric vehicle charging management, (2) hybrid AC/DC microgrid energy management, (3) distribution system management, (4) transmission system management, (5) urban road networks. The uncertainty quantification method is mainly based on (1) TailRiskScenGen.jl and (2) StatsBase.jl.
 
 The general steps are listed as follows:
 
