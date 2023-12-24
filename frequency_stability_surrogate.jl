@@ -14,7 +14,7 @@ upper_bound = maximum(sample_points, dims = 2)
 n_samples = size(sample_points, 2)
 n_features = size(sample_points, 1)
 n_targets = size(df_nadir, 1)
-# Convert sample_points matrix to a tuple of vectors for Flux with datap precision Float16
+# Convert sample_points matrix to a tuple of vectors for Flux with data precision
 sample_points = tuple([Float16.(sample_points[:, i]) for i in 1:n_samples]...)
 
 model1 = Chain(
@@ -23,4 +23,5 @@ model1 = Chain(
   Dense(2, 1)
 )
 neural = NeuralSurrogate(sample_points, df_nadir, lower_bound, upper_bound, model = model1, n_echos = 10)
-surrogate_optimize(schaffer, SRBF(), lower_bound, upper_bound, neural, SobolSample(), maxiters=20, num_new_samples=sample_points/10)
+# we need a specific function to approximate
+surrogate_optimize(schaffer, SRBF(), lower_bound, upper_bound, neural, SobolSample(), maxiters=20, num_new_samples=10)
