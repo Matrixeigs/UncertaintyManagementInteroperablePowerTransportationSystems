@@ -8,7 +8,13 @@
 
 
 # Import packages
-using QuasiMonteCarlo, MAT, Surrogates, SurrogatesFlux, Flux, Plots
+try # to load packages
+    using Plots
+catch # if not found, force install and load packages
+    Base.compilecache(Base.identify_package("GR"))
+    using Plots
+end
+using QuasiMonteCarlo, MAT, Surrogates, SurrogatesFlux, Flux
 
 # Define a function to generate random numbers
 H_min = 2.6344;

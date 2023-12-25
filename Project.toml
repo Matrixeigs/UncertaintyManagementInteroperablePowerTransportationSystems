@@ -1,2 +1,5 @@
 [deps]
 PowerSystems = "bcd98974-b02a-5e2f-9ee0-a103f5c450dd"
+
+[extras]
+GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"

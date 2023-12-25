@@ -1,3 +1,4 @@
+Base.compilecache(Base.identify_package("GR"))
 using Plots
 using Surrogates
 using Flux
