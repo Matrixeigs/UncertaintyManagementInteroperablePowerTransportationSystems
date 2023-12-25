@@ -17,3 +17,5 @@ execute!(sim, IDA(), dtmax = 0.02, saveat = 0.02, enable_progress_bar = false)
 results = read_results(sim)
 angle = get_state_series(results, ("generator-102-1", :δ));
 plot(angle, xlabel = "time", ylabel = "rotor angle [rad]", label = "gen-102-1")
+
+pwd()
