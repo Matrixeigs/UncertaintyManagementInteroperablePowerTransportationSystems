@@ -126,10 +126,13 @@ df_nadir = frequency_response.(sample_points);
 # matwrite("data_grid.mat", Dict("x" => sample_points, "y" => df_nadir))
 
 # Train a surrogate model with ReLU activation function
+# 
 model = Chain(
-    Dense(n_features, 5, σ),
-    Dense(5, 2, σ),
-    Dense(2, 1)
+    Dense(n_features, 6), relu,
+    Dense(6, 5), relu,
+    Dense(5, 4), relu,
+    Dense(4, 3), relu,
+    Dense(3, 1)
 )
 
 # sample_points = tuple([Float64.(sample_points[:, i]) for i in 1:n_samples]...);
@@ -139,11 +142,13 @@ neural = NeuralSurrogate(sample_points, df_nadir, lb, ub, model = model, n_echos
 # Assess the performance of the surrogate model
 error = zeros(n_samples);
 for i in 1:n_samples
-    error[i] = abs(frequency_response(sample_points[i]) - neural(sample_points[i]));
+    error[i] = frequency_response(sample_points[i]) - neural(sample_points[i]);
 end
 # Analyse the error 
 plot!(df_nadir, error, seriestype = :scatter, label = "error")
 
-surrogate_optimize(frequency_response, SRBF(), lb, ub, neural, SobolSample(), maxiters=20, num_new_samples=10)
+surrogate_optimize(frequency_response, SRBF(), lb, ub, neural, SobolSample(), maxiters=20, num_new_samples= 100)
 # Export the surrogate model
 matwrite("neural.mat", Dict("neural" => neural))
+
+relative_error = error ./ df_nadir;
